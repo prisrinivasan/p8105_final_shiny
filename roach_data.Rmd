@@ -22,7 +22,7 @@ Below is the same code for cleaning data as used in our `p8105_final` repository
 
 ```{r, message = FALSE, warning = FALSE}
 all_data = 
-read.csv(file = "./attempt/final_data/all_available_data.csv") %>% 
+read.csv(file = "./data/all_available_data.csv") %>% 
   janitor::clean_names() %>% 
   filter(name %in% c("Homes with Cockroaches", 
                      "Poverty", 
@@ -74,7 +74,7 @@ tidy_asthma =
   view()
 
 #importing shapefiles
-shape = st_read("./attempt/final_data/shapefiles/", quiet = TRUE)
+shape = st_read("./data/shapefiles/", quiet = TRUE)
 
 #merging with the tidy dataset
 tidy_asthma_sf = merge(shape, tidy_asthma, by.x = "UHFCODE", by.y = "geo_join_id") %>% 
