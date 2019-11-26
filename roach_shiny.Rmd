@@ -1,0 +1,89 @@
+---
+title: "Cockroach Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+    source_code: embed
+runtime: shiny
+---
+
+```{r, message = FALSE, warning = FALSE, include=FALSE, echo=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(viridis)
+library(leaflet)
+library(plotly)
+library(shiny)
+library(sf)
+library(sp)
+library(tmap)
+library(devtools)
+library(rgdal)
+library(rsconnect)
+```
+
+```{r, message = FALSE, warning = FALSE}
+#Loading dataframe saved from a different Rmd
+load("tidy_asthma_sf_ll.Rda")
+
+#creating color palette
+pal = colorQuantile("Reds", tidy_asthma_sf_ll$homes_with_cockroaches, n = 7)
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+year = as.character(c("2011", "2012", "2013", "2014"))
+
+#selectInput for year choices
+selectInput(
+  "year", 
+  label = h3("Select Year"),
+  choices = year,
+  selected = "2011")
+
+#creating vector with borough names for choices
+borough = c("Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island")
+
+#function for borough choices
+func = function(element, borough) {
+  if (element %in% borough) {
+    TRUE} else{
+      FALSE}}
+
+#checkboxes
+checkboxGroupInput(
+  "borough", 
+  label = h3("Choose borough"),
+  choices = borough,
+  selected = "Manhattan")
+
+hr()
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### Chart A
+```{r}
+mapinput = reactive({
+  tidy_asthma_sf_ll %>%
+    mutate(borough = map(borough, func, input$borough),
+           roach_label = str_c("Homes with Cockroaches: ", homes_with_cockroaches, "\n , Neighborhood: ", uhf_neigh)) %>% 
+    filter(borough == TRUE,
+           time_period == input$year)
+})
+
+renderLeaflet({
+  mapinput() %>% 
+    leaflet() %>%
+    addProviderTiles("CartoDB.Positron") %>%
+    addPolygons(stroke = FALSE,
+                color = ~pal(homes_with_cockroaches),
+                fillOpacity = 0.7,
+                smoothFactor = 0.2,
+                label = ~roach_label)
+  })
+```
