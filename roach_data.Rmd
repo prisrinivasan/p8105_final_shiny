@@ -12,8 +12,6 @@ library(plotly)
 library(shiny)
 library(sf)
 library(sp)
-library(tmap)
-library(devtools)
 library(rgdal)
 library(rsconnect)
 ```
@@ -26,7 +24,7 @@ I used a different shapefiles source than the nyc.gov files because the Env & He
 
 ```{r, message = FALSE, warning = FALSE}
 all_data = 
-read.csv(file = "./data/all_available_data.csv") %>% 
+read.csv(file = "./roach_shiny/data/all_available_data.csv") %>% 
   janitor::clean_names() %>% 
   filter(name %in% c("Homes with Cockroaches", 
                      "Poverty", 
@@ -78,7 +76,7 @@ tidy_asthma =
   view()
 
 #importing shapefiles
-shape = st_read("./data/shapefiles/", quiet = TRUE)
+shape = st_read("./roach_shiny/data/shapefiles/", quiet = TRUE)
 
 #merging with the tidy dataset
 tidy_asthma_sf = merge(shape, tidy_asthma, by.x = "UHFCODE", by.y = "geo_join_id") %>% 
