@@ -20,6 +20,10 @@ library(rsconnect)
 
 Below is the same code for cleaning data as used in our `p8105_final` repository. Added is the code to save `tidy_asthma_sf_ll` as an `.Rda` file so it can be easily accessed for the shiny app.
 
+The `all_available_data.csv` can be downloaded (here)[http://a816-dohbesp.nyc.gov/IndicatorPublic/EPHTCsv/AllAvailableData.zip]. The website with all datasets is (here)[http://a816-dohbesp.nyc.gov/IndicatorPublic/BuildATable.aspx].
+
+I used a different shapefiles source than the nyc.gov files because the Env & Health Data Portal file was inconsistent - combined certain neighborhoods that weren't combined in the rest of the datasets. I got the [shape files](https://www1.nyc.gov/site/doh/data/health-tools/maps-gis-data-files-for-download.page) from a different nyc.gov page.
+
 ```{r, message = FALSE, warning = FALSE}
 all_data = 
 read.csv(file = "./data/all_available_data.csv") %>% 
