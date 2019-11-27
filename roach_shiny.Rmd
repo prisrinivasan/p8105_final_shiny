@@ -79,10 +79,34 @@ renderLeaflet({
   mapinput() %>% 
     leaflet() %>%
     addProviderTiles("CartoDB.Positron") %>%
-    addPolygons(stroke = FALSE,
+    addPolygons(stroke = TRUE,
                 color = ~pal(homes_with_cockroaches),
-                fillOpacity = 0.7,
+                fillOpacity = 0.8,
                 smoothFactor = 0.2,
-                label = ~roach_label)
+                highlight = highlightOptions(weight = 4,
+                                             color = "white",
+                                             bringToFront = TRUE),
+                label = ~roach_label) %>% 
+    addLegend("bottomright",
+              pal = pal,
+              values = ~homes_with_cockroaches,
+              title = "Percent of Homes with Cockroaches",
+              #labFormat = labelFormat(suffix = "%"),
+              opacity = 1)
   })
 ```
+
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Plotly??? Bar chart from lorraine
+```{r}
+
+```
+
+### something else for other tab
+```{r}
+
+```
+
