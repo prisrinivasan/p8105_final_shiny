@@ -16,7 +16,6 @@ library(plotly)
 library(shiny)
 library(sf)
 library(sp)
-library(tmap)
 library(devtools)
 library(rgdal)
 library(rsconnect)
@@ -57,7 +56,7 @@ checkboxGroupInput(
   "borough", 
   label = h3("Choose borough"),
   choices = borough,
-  selected = "Manhattan")
+  selected = borough)
 
 hr()
 ```
