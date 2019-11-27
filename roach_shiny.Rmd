@@ -80,10 +80,12 @@ renderLeaflet({
     leaflet() %>%
     addProviderTiles("CartoDB.Positron") %>%
     addPolygons(stroke = TRUE,
+                weight = 2,
+                opacity = 1,
                 color = ~pal(homes_with_cockroaches),
                 fillOpacity = 0.8,
                 smoothFactor = 0.2,
-                highlight = highlightOptions(weight = 4,
+                highlight = highlightOptions(weight = 3,
                                              color = "white",
                                              bringToFront = TRUE),
                 label = ~roach_label) %>% 
