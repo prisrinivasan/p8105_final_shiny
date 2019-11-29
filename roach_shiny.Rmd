@@ -2,7 +2,7 @@
 title: "Cockroach Dashboard"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: row
+    orientation: columns
     source_code: embed
 runtime: shiny
 ---
@@ -19,11 +19,14 @@ library(sp)
 library(devtools)
 library(rgdal)
 library(rsconnect)
+library(magick)
 ```
 
 ```{r, message = FALSE, warning = FALSE}
-#Loading dataframe saved from a different Rmd
+#datasets tidied on roach_data.Rmd for cleanliness
+#loading dataframes saved from roach_data.Rmd
 load("tidy_asthma_sf_ll.Rda")
+load("tidy_asthma.Rda")
 
 #creating color palette
 pal = colorQuantile("Reds", tidy_asthma_sf_ll$homes_with_cockroaches, n = 7)
@@ -33,7 +36,7 @@ Column {.sidebar}
 -----------------------------------------------------------------------
 
 ```{r}
-year = as.character(c("2011", "2012", "2013", "2014"))
+year = as.character(c("2011", "2014"))
 
 #selectInput for year choices
 selectInput(
@@ -46,8 +49,8 @@ selectInput(
 borough = c("Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island")
 
 #function for borough choices
-func = function(element, borough) {
-  if (element %in% borough) {
+func = function(x, borough) {
+  if (x %in% borough) {
     TRUE} else{
       FALSE}}
 
@@ -62,20 +65,23 @@ hr()
 ```
 
 
-Row
+Column
 -----------------------------------------------------------------------
 
 ### Chart A
 ```{r}
 mapinput = reactive({
+  
   tidy_asthma_sf_ll %>%
     mutate(borough = map(borough, func, input$borough),
            roach_label = str_c("Homes with Cockroaches: ", homes_with_cockroaches, "\n , Neighborhood: ", uhf_neigh)) %>% 
     filter(borough == TRUE,
            time_period == input$year)
+  
 })
 
 renderLeaflet({
+  
   mapinput() %>% 
     leaflet() %>%
     addProviderTiles("CartoDB.Positron") %>%
@@ -95,20 +101,62 @@ renderLeaflet({
               title = "Percent of Homes with Cockroaches",
               #labFormat = labelFormat(suffix = "%"),
               opacity = 1)
+  
   })
 ```
 
 
-Row {.tabset .tabset-fade}
+Asthma: {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
-### Plotly??? Bar chart from lorraine
+### NYC Neighborhoods
 ```{r}
+#labeling options for axes
+xa_1 = list(
+  title = "Neighborhood",
+  showticklabels = FALSE
+)
 
+ya = list(
+  title = "Asthma Prevalence"
+)
+
+tidy_asthma_2 %>%
+  filter(geo_type_name == "UHF42") %>%
+  arrange(geo_join_id) %>%
+    plot_ly(
+    x = ~geo_join_id, 
+    y = ~public_school_children_5_14_yrs_old_with_asthma, 
+    color = ~geo_place_name,
+    text = ~geo_place_name,
+    frame = ~time_period,
+    hoverinfo = "text",
+    type = 'bar'
+  ) %>% 
+  layout(xaxis = xa_1, yaxis = ya, showlegend = FALSE)
 ```
 
-### something else for other tab
+### NYC Boroughs
 ```{r}
+#creating new x axis options and reusing y axis label options
+xa_2 = list(
+  title = "Borough"
+)
 
+tidy_asthma_2 %>%
+  filter(geo_type_name == "Borough") %>%
+  arrange(geo_join_id) %>%
+  plot_ly(
+    x = ~geo_place_name, 
+    y = ~public_school_children_5_14_yrs_old_with_asthma, 
+    color = ~geo_place_name,
+    text = ~geo_place_name,
+    frame = ~time_period,
+    hovertemplate = paste(
+      "<b>%{x}</b><br>",
+      "<i>Rate</i>: %{y:.2f}"),
+    type = 'bar'
+  ) %>% 
+  layout(xaxis = xa_2, yaxis = ya, showlegend = FALSE)
 ```
 

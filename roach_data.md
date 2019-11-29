@@ -1,20 +1,5 @@
----
-title: "Cockroach Dashboard"
-output: github_document
----
-
-```{r, message = FALSE, warning = FALSE, include=FALSE, echo=FALSE}
-library(flexdashboard)
-library(tidyverse)
-library(viridis)
-library(leaflet)
-library(plotly)
-library(shiny)
-library(sf)
-library(sp)
-library(rgdal)
-library(rsconnect)
-```
+Cockroach Dashboard
+================
 
 Below is the same code for cleaning data as used in our `p8105_final` repository. Added is the code to save `tidy_asthma_sf_ll` as an `.Rda` file so it can be easily accessed for the shiny app.
 
@@ -22,7 +7,7 @@ The `all_available_data.csv` can be downloaded [here](http://a816-dohbesp.nyc.go
 
 I used a different shapefiles source than the nyc.gov files because the Env & Health Data Portal file was inconsistent - combined certain neighborhoods that weren't combined in the rest of the datasets. I got the [shape files](https://www1.nyc.gov/site/doh/data/health-tools/maps-gis-data-files-for-download.page) from a different nyc.gov page.
 
-```{r, message = FALSE, warning = FALSE}
+``` r
 all_data = 
 read.csv(file = "./roach_shiny/data/all_available_data.csv") %>% 
   janitor::clean_names() %>% 
@@ -72,7 +57,10 @@ tidy_asthma =
   full_join(df3, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
   full_join(df4, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
   full_join(df5, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
-  select(geo_type_name, geo_join_id, time_period, geo_place_name, homes_with_cockroaches, poverty, public_school_children_5_14_yrs_old_with_asthma, public_school_children_5_14_yrs_old_with_persistent_asthma, asthma_hospitalizations_children_5_to_17_yrs_old)
+  select(geo_type_name, geo_join_id, time_period, geo_place_name, homes_with_cockroaches, poverty, public_school_children_5_14_yrs_old_with_asthma, public_school_children_5_14_yrs_old_with_persistent_asthma, asthma_hospitalizations_children_5_to_17_yrs_old) %>% 
+  mutate(time_period = as.numeric(levels(time_period)) [time_period],
+         geo_join_id = as.character(as.numeric(levels(geo_join_id)) [geo_join_id]),
+         geo_place_name = as.character(geo_place_name))
 
 #importing shapefiles
 shape = st_read("./roach_shiny/data/shapefiles/", quiet = TRUE)
@@ -81,6 +69,7 @@ shape = st_read("./roach_shiny/data/shapefiles/", quiet = TRUE)
 tidy_asthma_sf = merge(shape, tidy_asthma, by.x = "UHFCODE", by.y = "geo_join_id") %>% 
   janitor::clean_names() %>% 
   mutate(uhfcode = as.character(uhfcode),
+         time_period = as.character(time_period),
          homes_with_cockroaches = as.numeric(homes_with_cockroaches))
 
 #changing geometry to latitude and longitude
@@ -89,21 +78,3 @@ tidy_asthma_sf_ll = st_transform(tidy_asthma_sf, "+proj=longlat +datum=WGS84")
 #saving as an R dataframe so the shiny app can access it
 save(tidy_asthma_sf_ll, file = "tidy_asthma_sf_ll.Rda")
 ```
-
-
-```{r}
-## Joining
-tidy_asthma_2 = 
-  full_join(df1, df2, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
-  full_join(df3, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
-  full_join(df4, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
-  full_join(df5, by = c("geo_type_name", "geo_join_id", "time_period", "geo_place_name")) %>% 
-  select(geo_type_name, geo_join_id, time_period, geo_place_name, homes_with_cockroaches, poverty, public_school_children_5_14_yrs_old_with_asthma, public_school_children_5_14_yrs_old_with_persistent_asthma, asthma_hospitalizations_children_5_to_17_yrs_old) %>% 
-  mutate(time_period = as.numeric(levels(time_period)) [time_period],
-         geo_join_id = as.character(as.numeric(levels(geo_join_id)) [geo_join_id]),
-         geo_place_name = as.character(geo_place_name)) 
-
-save(tidy_asthma_2, file = "tidy_asthma.Rda")
-
-```
-
