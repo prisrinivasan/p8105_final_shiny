@@ -41,9 +41,9 @@ We created these interactive maps to show the spread of cockroaches and rate of 
 
 The variable `homes_with_cockroaches` indicates the percentage of homes in each neighborhood that have seen a cockroach every day for a month.
 
-The rate of asthma is shown as a number per 1,000.
+The rate of asthma is shown as a number per 1,000 in each neighborhood among public school children ages 5-14.
 
-#### Use the dropdown, checkboxes, and slider below to visualize roaches and rate in in New York.
+#### Use the dropdown, checkboxes, and slider below to visualize roaches and rate in New York.
 
 ```{r}
 year = as.character(c("2011", "2014"))
@@ -128,7 +128,7 @@ renderLeaflet({
 
 ### Home Alone 7: Asthma Attack
 ```{r}
-mapinput = reactive({
+mapinput_2 = reactive({
   
   tidy_asthma_sf_ll %>%
     mutate(borough = map(borough, func, input$borough),
@@ -137,10 +137,9 @@ mapinput = reactive({
            time_period == input$year)
   
 })
-
 renderLeaflet({
   
-  mapinput() %>% 
+  mapinput_2() %>% 
     leaflet() %>%
     addProviderTiles("CartoDB.Positron") %>%
     addPolygons(stroke = TRUE,
