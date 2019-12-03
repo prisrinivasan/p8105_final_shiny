@@ -17,35 +17,33 @@ library(flexdashboard)
 library(tidyverse)
 library(viridis)
 library(leaflet)
-library(plotly)
 library(shiny)
 library(sf)
 library(sp)
 library(devtools)
 library(rgdal)
 library(rsconnect)
-library(magick)
 ```
 
 ```{r, message = FALSE, warning = FALSE}
-#datasets tidied on roach_data.Rmd for cleanliness
-#loading dataframes saved from roach_data.Rmd
+#dataset tidied on roach_data.Rmd for cleanliness
+#loading dataframe saved from roach_data.Rmd
 load("tidy_asthma_sf_ll.Rda")
-load("tidy_asthma.Rda")
 
 #creating color palette
-pal = colorQuantile("Reds", tidy_asthma_sf_ll$homes_with_cockroaches, n = 7)
+pal = colorQuantile("Reds", tidy_asthma_sf_ll$homes_with_cockroaches, n = 6)
+pal_a = colorQuantile("Reds", tidy_asthma_sf_ll$public_school_children_5_14_yrs_old_with_asthma, n = 6)
 ```
 
 Column {.sidebar}
 -----------------------------------------------------------------------
-We created this interactive map to show the spread of roaches over neighborhoods in New York City.
+We created these interactive maps to show the spread of cockroaches and rate of asthma over neighborhoods in New York City.
 
-The variable `homes_with_cockroaches` indicates the percentage homes that have seen a cockroach every day for a month.
+The variable `homes_with_cockroaches` indicates the percentage of homes in each neighborhood that have seen a cockroach every day for a month.
 
-The bar charts to the right show the increase in asthma prevalence in NYC neighborhoods and boroughs in each year from 2011 to 2014. Press `Play` to view the changes.
+The rate of asthma is shown as a number per 1,000.
 
-#### Use the dropdown, checkboxes, and slider below to visualize roaches in New York.
+#### Use the dropdown, checkboxes, and slider below to visualize roaches and rate in in New York.
 
 ```{r}
 year = as.character(c("2011", "2014"))
@@ -83,7 +81,7 @@ hr()
 ```
 
 
-Column
+Column {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
 ### Home Alone 6: Roach Invasion
@@ -128,57 +126,43 @@ renderLeaflet({
 ```
 
 
-Asthma: {.tabset .tabset-fade}
------------------------------------------------------------------------
-
-### Asthma in Neighborhoods
+### Home Alone 7: Asthma Attack
 ```{r}
-#labeling options for axes
-xa_1 = list(
-  title = "Neighborhood",
-  showticklabels = FALSE
-)
+mapinput = reactive({
+  
+  tidy_asthma_sf_ll %>%
+    mutate(borough = map(borough, func, input$borough),
+           roach_label = str_c("Asthma Rate (per 1,000): ", public_school_children_5_14_yrs_old_with_asthma, "\n, Neighborhood: ", uhf_neigh)) %>% 
+    filter(borough == TRUE,
+           time_period == input$year)
+  
+})
 
-ya = list(
-  title = "Asthma Prevalence"
-)
-
-tidy_asthma_2 %>%
-  filter(geo_type_name == "UHF42") %>%
-  arrange(geo_join_id) %>%
-    plot_ly(
-    x = ~geo_join_id, 
-    y = ~public_school_children_5_14_yrs_old_with_asthma, 
-    color = ~geo_place_name,
-    text = ~geo_place_name,
-    frame = ~time_period,
-    hoverinfo = "text",
-    type = 'bar'
-  ) %>% 
-  layout(xaxis = xa_1, yaxis = ya, showlegend = FALSE)
+renderLeaflet({
+  
+  mapinput() %>% 
+    leaflet() %>%
+    addProviderTiles("CartoDB.Positron") %>%
+    addPolygons(stroke = TRUE,
+                weight = 2,
+                opacity = 1,
+                color = ~pal_a(public_school_children_5_14_yrs_old_with_asthma),
+                fillOpacity = 0.8,
+                smoothFactor = 0.2,
+                highlight = highlightOptions(weight = 3,
+                                             color = "white",
+                                             bringToFront = TRUE),
+                label = ~roach_label) %>% 
+    addLegend("bottomright",
+              pal = pal_a,
+              values = ~public_school_children_5_14_yrs_old_with_asthma,
+              title = "Asthma Count (per 1,000)",
+              opacity = 1,
+              labFormat = function(type, cuts, p) {
+                n = length(cuts)
+                paste0(round(cuts)[-n], " &ndash; ", round(cuts)[-1])
+                }
+              )
+  
+  })
 ```
-
-### Asthma in Boroughs
-```{r}
-#creating new x axis options and reusing y axis label options
-xa_2 = list(
-  title = "Borough"
-)
-
-tidy_asthma_2 %>%
-  filter(geo_type_name == "Borough") %>%
-  arrange(geo_join_id) %>%
-  plot_ly(
-    x = ~geo_place_name, 
-    y = ~public_school_children_5_14_yrs_old_with_asthma, 
-    color = ~geo_place_name,
-    text = ~geo_place_name,
-    frame = ~time_period,
-    hovertemplate = paste(
-      "<b>%{x}</b><br>",
-      "<i>Rate</i>: %{y:.2f}"),
-    type = 'bar'
-  ) %>% 
-  layout(xaxis = xa_2, yaxis = ya, showlegend = FALSE)
-```
-
